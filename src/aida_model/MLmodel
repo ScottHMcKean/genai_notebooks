@@ -1,0 +1,16 @@
+databricks_runtime: '15.4'
+flavors:
+  python_function:
+    cloudpickle_version: 2.2.1
+    code: null
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.11.0
+    streamable: false
+mlflow_version: 2.19.0
+model_size_bytes: 5232
+model_uuid: 8d546e346c554ef38aacdf2ca803232c
+utc_time_created: '2025-01-17 21:40:20.380299'
