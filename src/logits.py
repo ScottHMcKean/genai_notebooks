@@ -17,6 +17,11 @@ from databricks_langchain import ChatDatabricks
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Here is a default use of OpenAI's interface giving log probs of the top 5 choices
+
+# COMMAND ----------
+
 openai_llm = OpenAI(api_key=dbutils.secrets.get('shm','gpt-4o-mini'))
 
 completion = openai_llm.chat.completions.create(
@@ -30,6 +35,11 @@ completion = openai_llm.chat.completions.create(
 )
 
 print(completion.choices[0].message)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC This section uses Chat Databricks - token probabilities don't pass through
 
 # COMMAND ----------
 
@@ -53,4 +63,36 @@ completion
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC This section uses the OpenAI interface but with external model serving
 
+# COMMAND ----------
+
+from openai import OpenAI
+import os
+
+DATABRICKS_TOKEN = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+
+client = OpenAI(
+  api_key=DATABRICKS_TOKEN,
+  base_url="https://adb-984752964297111.11.azuredatabricks.net/serving-endpoints"
+)
+
+chat_completion = client.chat.completions.create(
+  messages=[
+  {
+    "role": "system",
+    "content": "You are an AI assistant"
+  },
+  {
+    "role": "user",
+    "content": "Tell me about Large Language Models"
+  }
+  ],
+  model="shm-gpt-4o-mini",
+  max_tokens=256,
+  logprobs=True,
+  top_logprobs=5
+)
+
+print(chat_completion.choices[0].message.content)
