@@ -1,7 +1,0 @@
-mlflow==2.19.0
-attrs==22.1.0
-brotli==1.0.9
-cloudpickle==2.2.1
-configparser==5.2.0
-openai==1.6.1
-rich==13.7.1

@@ -1,0 +1,52 @@
+databricks_resources:
+  llm_endpoint_name: databricks-meta-llama-3-1-70b-instruct
+  vector_search_endpoint_name: dbdemos_vs_endpoint
+input_example:
+  messages:
+  - content: What are responsibilities Director of Marketing?
+    role: user
+output_example:
+  content: To start a Databricks cluster, hit the button
+  id: run-d304fcfb-09e6-4eb3-83df-b6692fdc1c0a-0
+  response_metadata:
+    completion_tokens: 108
+    prompt_tokens: 65
+    total_tokens: 173
+  type: ai
+llm_config:
+  llm_parameters:
+    max_tokens: 1500
+    temperature: 0.01
+  llm_system_prompt_template: 'Assistant helps the company employees with their questions on company policies, roles. 
+    Always include the source metadata for each fact you use in the response. Use square brakets to reference the source, e.g. [role_library_pdf-10]. 
+    Properly format the output for human readability with new lines.
+    Answer the question based only on the following context:
+    {context}
+    Here is the history of the current conversation you are having with your user: {chat_history}. 
+    Question: {question}'
+  prompt_template: 'Assistant helps the company employees with their questions on company policies, roles. 
+    Always include the source metadata for each fact you use in the response. Use square brakets to reference the source, e.g. [role_library_pdf-10]. 
+    Properly format the output for human readability with new lines.
+    Answer the question based only on the following context:
+    {context}
+    Here is the history of the current conversation you are having with your user: {chat_history}. 
+    Question: {question}'
+  prompt_template_variables:
+    - context
+    - chat_history
+    - question
+retriever_config:
+  chunk_template: 'Passage: {chunk_text}'
+  data_pipeline_tag: poc
+  parameters:
+    k: 5
+    query_type: ann
+  schema:
+    chunk_text: chunked_text
+    document_uri: path
+    primary_key: chunk_id
+  vector_search_index: dbdemos.dbdemos_rag_chatbot.databricks_documentation_vs_index
+vector_search_config:  
+  pipeline_type: TRIGGERED
+  vector_search_endpoint_name: dbdemos_vs_endpoint
+  vector_index_name: dbdemos.dbdemos_rag_chatbot.databricks_documentation_vs_index

@@ -1,0 +1,24 @@
+resources:
+  pipelines:
+    pipeline_witsml_ingest:
+      name: witsml_ingest
+      configuration:
+        ingest_path: /Volumes/shm/dts/witsml_landing/
+      libraries:
+        - notebook:
+            path: /Workspace/Users/scott.mckean@databricks.com/witsml/ingest dlt
+        - notebook:
+            path: /Workspace/Users/scott.mckean@databricks.com/witsml/silver dlt
+      target: dts
+      development: true
+      photon: true
+      catalog: shm
+      notifications:
+        - email_recipients:
+            - scott.mckean@databricks.com
+          alerts:
+            - on-update-fatal-failure
+            - on-flow-failure
+      serverless: true
+      data_sampling: false
+      budget_policy_id: 4f55caad-9470-493b-8f40-d2ccd4b638e9

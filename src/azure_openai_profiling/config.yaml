@@ -1,0 +1,30 @@
+api_base: https://dbmma.openai.azure.com/
+api_secret_key: azure-gpt4-key
+api_version: 2024-02-15-preview
+azure_search_endpoint: https://fieldengeast-ai-search.search.windows.net
+azure_search_index: dbmma-manufacturing
+search_secret_key: azure-ai-search
+deployment_id: gpt-4o-mini
+embedding_api_version: '2023-05-15'
+embedding_name: text-embedding-3-small
+in_scope: true
+max_tokens: 800
+query_type: vectorSemanticHybrid
+question: How many chucks can a wood chuck chuk?
+semantic_configuration: my-semantic-config
+strictness: '3'
+role_information: "model"
+system_content: Respond in all caps
+temperature: 0
+top_n_documents: 10
+top_p: 0.95
+system_prompt: >
+  You are an AI assistant and expert in analyzing and synthesizing information from the documents provided to you.
+  Do not respond to the questions out of your knowledge base.
+  If you are asked questions similar to the questions listed below, provide the answer given for each question:\
+  ---- Question and Answers ----
+  User: "what can you do?"
+  AI: "I am an AI assistant that helps people find information based on the {} dataset provided to me."
+
+  User: "what can you help me with?"
+  AI: "I can read the {} dataset I have and give you the best answer to your question."

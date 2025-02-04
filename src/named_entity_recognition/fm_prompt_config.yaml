@@ -1,0 +1,32 @@
+fm_prompt_template: "\n    You are a data labeler labeling data to be used in token/Named\
+  \ Entity Recognition. Your task is to identify categorical classifications using\
+  \ the BIO format, where the tokens are the words in the sentence and the tags are\
+  \ the classifications. The classifications should begin with Beginning (B), Inside\
+  \ (I) of an entity, or Outside (O) of any entity. \n    \n    Use the following\
+  \ categories:\n    MATE: Material\n    MANP: Manufacturing Process\n    APPL: Application\n\
+  \    ENGF: Features\n    MECHP: Mechanical Properties\n    PROC: Characterization\n\
+  \    PROP: Parameters\n    MACEQ: Machine/Equipment\n    ENAT: Enabling Technology\n\
+  \    CONPRI: Concept/Principles\n    BIOP: BioMedical\n    MANS: Manufacturing Standards\n\
+  \n    Follow these guidelines:\n    - Do not add any commentary or repeat the instructions.\n\
+  \    - Extract the categories list above - if the token is not classified as as\
+  \ category, return O.\n    - Place each token from the input in a Python list format.\
+  \ Ensure the tokens are enclosed in square brackets and separated by commas.\n \
+  \   - Next, Place the extracted names in a Python list format. Ensure the names\
+  \ are enclosed in square brackets and separated by commas.\n    - Do not add any\
+  \ text before or after the two Python lists.\n    - Respond without using special\
+  \ or escape characters other than commas (,) and dashes (-)\n    - Respond without\
+  \ using newline or tab characters\n\n    Here are some examples:\n    <example>\n\
+  \    Revealed the location-specific flow patterns and quantified the speeds of various\
+  \ types of flow .\n\n    Tokens:['Revealed','the','location-specific','flow','patterns','and','quantified','the','speeds','of','various','types','of','flow','.']\n\
+  \    Categories:['O','O','O','I-FEAT','I-FEAT','O','O','O','O','O','O','O','O','O','O'])\n\
+  \n    <example>\n    In this work , X-ray tomography was employed to provide insights\
+  \ into pore closure efficiency by HIP for an intentional and artificially-induced\
+  \ cavity as well as for a range of typical process-induced pores ( lack of fusion\
+  \ , keyhole , contour pores , etc .\n\n    Tokens:['In','this','work',',','X-ray','tomography','was','employed','to','provide','insights','into','pore','closure','efficiency','by','HIP','for','an','intentional','and','artificially-induced','cavity','as','well','as','for','a','range','of','typical','process-induced','pores','(','lack','of','fusion',',','keyhole',',','contour','pores',',','etc','.']\n\
+  \    Categories:['O','O','O','O','B-CHAR','I-CHAR','O','O','O','O','O','O','B-PRO','O','O','O','B-MANP','O','O','O','O','O','O','B-MATE','O','B-MATE','O','O','B-PARA','O','O','O','B-PRO','O','O','O','B-CONPRI','O','O','O','B-FEAT','O','O','O','O']\n\
+  \n    <example>\n    in coupon samples of Ti6Al4V .\n    \n    Tokens:['in', 'coupon',\
+  \ 'samples', 'of', 'Ti6Al4V', '.']\n    Categories:['O','O','O','B-CONPRI','O','B-MATE','O']\n\
+  \n    Now classify the following text:\n    {user_query}\n\n    "
+fm_serving_endpoint_name: databricks-mixtral-8x7b-instruct
+max_tokens: 1000
+temperature: 0.01
