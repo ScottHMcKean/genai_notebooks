@@ -1,0 +1,101 @@
+
+[project]
+name = "genai_notebooks"
+version = "0.0.3"
+description = "Random Notebooks for GenAI"
+authors = [
+    {name = "Scott McKean", email = "scott.mckean@databricks.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    # Core framework
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "pandas>=2.0.0",
+    "pyarrow>=10.0.0",
+    
+    # Graph database
+    "kuzu>=0.11.1",
+    
+    # LLM and AI
+    "databricks-connect>=16.0.0",
+    "databricks-langchain>=0.2.0",
+    "langgraph>=0.5.0",
+    "mlflow>=3.1.0",
+    "openai",
+    
+    # Web interface
+    "streamlit>=1.28.0",
+    "plotly>=5.15.0",
+    "pyvis>=0.3.2",
+    
+    # Utilities
+    "pyyaml>=6.0.0",
+    "html2text>=2020.1.16",
+    "pdfplumber>=0.11.0",
+    "networkx>=3.0",
+
+    # Development
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "ipykernel",
+    "pip"
+]
+
+[project.urls]
+Homepage = "https://databricks.com"
+Repository = "https://github.com/ScottHMcKean/genai_notebooks"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --tb=short"
+testpaths = [
+    "tests",
+]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
+markers = [
+    "integration: marks tests as integration tests (slow, requires network)",
+    "skip: marks tests as skipped by default",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+] 

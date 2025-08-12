@@ -7,10 +7,16 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "python.analysis.extraPaths": ["src"],
+    "python.analysis.extraPaths": [
+        "src"
+    ],
     "files.exclude": {
         "**/*.egg-info": true,
         "**/__pycache__": true,
         ".pytest_cache": true,
     },
+    "cursorpyright.analysis.extraPaths": [
+        "src"
+    ],
+    "cursorpyright.analysis.stubPath": ".vscode",
 }
