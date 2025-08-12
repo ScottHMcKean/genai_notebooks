@@ -1,0 +1,16 @@
+{
+  "template_name": "concise",
+  "avg_quality_score": 87.5,
+  "min_quality_score": 50,
+  "max_quality_score": 100,
+  "score_std": 25.0,
+  "total_questions": 4,
+  "valid_responses": 4,
+  "error_count": 0,
+  "error_rate": 0.0,
+  "high_quality_count": 3,
+  "medium_quality_count": 1,
+  "low_quality_count": 0,
+  "high_quality_percentage": 75.0,
+  "evaluation_date": "2025-06-24T14:55:07.824135"
+}

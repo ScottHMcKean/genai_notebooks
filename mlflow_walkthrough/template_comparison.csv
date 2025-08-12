@@ -1,0 +1,5 @@
+Template,Avg Quality Score,Valid Responses,Error Rate,High Quality %
+concise,87.5,4,0.0%,75.0%
+basic,81.25,4,0.0%,75.0%
+friendly,81.25,4,0.0%,75.0%
+detailed,81.25,4,0.0%,100.0%
