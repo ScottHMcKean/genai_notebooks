@@ -17,9 +17,11 @@ from langchain_core.language_models.llms import create_base_retry_decorator
 
 from fastapi import APIRouter
 from typing import Dict
+import sys
 
 router = APIRouter()
 
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TEMPERATURE = 0.1
@@ -32,20 +34,29 @@ llm_retry_strategy = create_base_retry_decorator(
 )
 
 
-from databricks.sdk.core import Config
-
-config = Config(profile="DEFAULT")
-token = config.oauth_token().access_token
-host = config.host
-
-
 def _create_vector_search_client() -> VectorSearchClient:
     """Create a VectorSearchClient using either PAT or service principal env vars.
 
     Supported env variables:
       - DATABRICKS_HOST (required)
-      - DATABRICKS_TOKEN (PAT) OR (DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET)
+      - DATABRICKS_TOKEN (PAT)
     """
+    try:
+        host = os.getenv("DATABRICKS_HOST")
+        assert host is not None, "DATABRICKS_HOST is not set"
+        token = os.getenv("PAT")
+        assert token is not None, "PAT is not set"
+    except Exception as e:
+        logger.error(
+            f"Error getting DATABRICKS_HOST, trying SDK: {str(e)}",
+            exc_info=True,
+        )
+        from databricks.sdk.core import Config
+
+        config = Config(profile="DEFAULT")
+        token = config.oauth_token().access_token
+        host = config.host
+
     return VectorSearchClient(
         workspace_url=host,
         personal_access_token=token,
@@ -64,11 +75,21 @@ class LLMClient:
             temperature=TEMPERATURE,
             max_tokens=MAX_TOKENS,
         )
-        self.vsc = _create_vector_search_client()
-        self.vs_index = self.vsc.get_index(
-            endpoint_name="one-env-shared-endpoint-3",
-            index_name="shm.multimodal.index",
-        )
+
+        try:
+            self.vsc = _create_vector_search_client()
+            self.vs_index = self.vsc.get_index(
+                endpoint_name="one-env-shared-endpoint-3",
+                index_name="shm.multimodal.index",
+            )
+        except Exception as e:
+            logger.error(
+                f"Error initializing vector search client: {str(e)}",
+                exc_info=True,
+            )
+            self.vsc = None
+            self.vs_index = None
+
         logger.info("LLMClient initialized")
 
     @llm_retry_strategy
@@ -83,10 +104,17 @@ class LLMClient:
         """Evaluate if existing context is sufficient to answer user's question."""
         logger.info("Evaluating context sufficiency for follow-up conversation")
 
-        initial_retrieved_context = self.vs_index.similarity_search(
-            query_text=user_message,
-            columns=["enriched_text", "headings"],
-        )
+        try:
+            initial_retrieved_context = self.vs_index.similarity_search(
+                query_text=user_message,
+                columns=["enriched_text", "headings"],
+            )
+        except Exception as e:
+            logger.error(
+                f"Error retrieving context: {str(e)}",
+                exc_info=True,
+            )
+            initial_retrieved_context = []
 
         context_text = "\n\n".join(
             f"Headings: {doc[1]}, Content: {doc[0]}"

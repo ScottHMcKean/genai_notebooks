@@ -1,2 +1,7 @@
 fastapi
 uvicorn
+databricks-langchain>=0.2.0
+langgraph>=0.5.0
+mlflow>=3.1.0
+openai
+databricks-vectorsearch>=0.44.0
