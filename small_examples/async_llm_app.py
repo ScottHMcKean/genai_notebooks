@@ -12,6 +12,7 @@ from databricks_langchain import ChatDatabricks
 from databricks.vector_search.client import VectorSearchClient
 from mlflow.entities import SpanType
 import mlflow
+import os
 from langchain_core.language_models.llms import create_base_retry_decorator
 
 # -------------------------
@@ -28,6 +29,8 @@ llm_retry_strategy = create_base_retry_decorator(
     max_retries=5,
 )
 
+host_url = "https://" + os.getenv("DATABRICKS_HOST")
+pat = os.getenv("PAT")
 
 class LLMClient:
     def __init__(self) -> None:
@@ -36,12 +39,18 @@ class LLMClient:
             temperature=TEMPERATURE,
             max_tokens=MAX_TOKENS,
         )
+        
         self.dbr_llm_mini = ChatDatabricks(
             endpoint="databricks-meta-llama-3-1-8b-instruct",
             temperature=TEMPERATURE,
             max_tokens=MAX_TOKENS,
         )
-        self.vsc = VectorSearchClient()
+        
+        self.vsc = VectorSearchClient(
+            workspace_url=host_url,
+            personal_access_token=pat
+        )
+
         self.vs_index = self.vsc.get_index(
             endpoint_name="one-env-shared-endpoint-3",
             index_name="shm.multimodal.index",

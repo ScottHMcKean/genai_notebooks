@@ -1,13 +1,8 @@
 command:
-  - uv
-  - run
+  - python
+  - -m
   - uvicorn
-  - small_examples.async_llm_app:app
-  - --host
-  - 0.0.0.0
-  - --port
-  - ${DATABRICKS_APP_PORT}
-# Optional environment variables to override defaults
+  - async_llm_app:app
 env:
   - name: LLM_ENDPOINT_NAME
     value: databricks-meta-llama-3-3-70b-instruct
@@ -15,3 +10,5 @@ env:
     value: one-env-shared-endpoint-3
   - name: VECTOR_SEARCH_INDEX_NAME
     value: shm.multimodal.index
+  - name: PAT
+    valueFrom: db_token

@@ -1,6 +1,6 @@
-fastapi==0.112.2
-uvicorn[standard]==0.30.6
-mlflow==3.1.0
-databricks-vectorsearch==0.44.0
-databricks-langchain==0.2.0
-langchain-core==0.2.33
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+mlflow==3.2.0
+databricks-vectorsearch==0.57
+databricks-langchain==0.5.1
+langchain-core==0.3.74
