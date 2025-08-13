@@ -15,9 +15,11 @@ from mlflow.entities import SpanType
 import mlflow
 from langchain_core.language_models.llms import create_base_retry_decorator
 
-# -------------------------
-# Notebook-like setup
-# -------------------------
+from fastapi import APIRouter
+from typing import Dict
+
+router = APIRouter()
+
 logger = logging.getLogger(__name__)
 
 TEMPERATURE = 0.1
@@ -30,6 +32,13 @@ llm_retry_strategy = create_base_retry_decorator(
 )
 
 
+from databricks.sdk.core import Config
+
+config = Config(profile="DEFAULT")
+token = config.oauth_token().access_token
+host = config.host
+
+
 def _create_vector_search_client() -> VectorSearchClient:
     """Create a VectorSearchClient using either PAT or service principal env vars.
 
@@ -37,29 +46,9 @@ def _create_vector_search_client() -> VectorSearchClient:
       - DATABRICKS_HOST (required)
       - DATABRICKS_TOKEN (PAT) OR (DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET)
     """
-    host = os.getenv("DATABRICKS_HOST")
-    pat = os.getenv("DATABRICKS_TOKEN")
-    sp_id = os.getenv("DATABRICKS_CLIENT_ID")
-    sp_secret = os.getenv("DATABRICKS_CLIENT_SECRET")
-
-    if not host:
-        raise RuntimeError(
-            "DATABRICKS_HOST is not set. Configure your app environment to include the workspace URL."
-        )
-
-    if sp_id and sp_secret:
-        # Service principal auth (recommended for Apps)
-        return VectorSearchClient(
-            service_principal_client_id=sp_id,
-            service_principal_client_secret=sp_secret,
-        )
-
-    if pat:
-        # PAT auth
-        return VectorSearchClient()
-
-    raise RuntimeError(
-        "Authentication not configured. Set DATABRICKS_TOKEN (PAT) or DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET (service principal)."
+    return VectorSearchClient(
+        workspace_url=host,
+        personal_access_token=token,
     )
 
 
@@ -167,10 +156,6 @@ class LLMClient:
         return result
 
 
-# -------------------------
-# Minimal FastAPI wrapper
-# -------------------------
-app = FastAPI(title="Async LLM App", version="0.1.0")
 client = LLMClient()
 
 
@@ -184,20 +169,9 @@ class EvaluateRequest(BaseModel):
     chat_history: List[Message]
 
 
-@app.get("/healthz")
-async def healthz() -> Dict[str, str]:
-    return {"status": "ok"}
-
-
-@app.post("/evaluate")
+@router.post("/evaluate")
 async def evaluate(req: EvaluateRequest) -> Dict[str, Any]:
     return await client.evaluate_context_sufficiency(
         user_message=req.user_message,
         chat_history=[m.model_dump() for m in req.chat_history],
     )
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("small_examples.async_llm_app:app", host="0.0.0.0", port=8000)
