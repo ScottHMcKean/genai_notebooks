@@ -1,1 +1,6 @@
-command: ["uvicorn", "app:app"]
+command: 
+  - "uvicorn"
+  - "app:app"
+env:
+  - name: PAT
+    valueFrom: app_token
