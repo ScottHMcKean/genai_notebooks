@@ -17,7 +17,3 @@ agents.enable_trace_reviews(
     "3c413350-9fab-4796-9756-3c8bbd997283"
   ],
 )
-
-# COMMAND ----------
-
-
