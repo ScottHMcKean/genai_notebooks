@@ -1,0 +1,36 @@
+# Azure AI Search Configuration for DsPy Information Extraction
+
+azure_search:
+  endpoint: "${AZURE_SEARCH_ENDPOINT}"
+  api_key: "${AZURE_SEARCH_KEY}"
+  index_name: "${AZURE_SEARCH_INDEX}"
+  content_field: "content"
+  title_field: "title"
+  use_semantic_search: true
+  top_k: 5
+
+azure_openai:
+  endpoint: "${AZURE_OPENAI_ENDPOINT}"
+  api_key: "${AZURE_OPENAI_KEY}"
+  deployment: "${AZURE_OPENAI_DEPLOYMENT}"
+  api_version: "2024-02-15-preview"
+  max_tokens: 2000
+  temperature: 0.1
+
+dspy_optimization:
+  optimizer: "MIPROv2"
+  num_candidates: 5
+  init_temperature: 0.2
+  num_threads: 2
+
+mlflow:
+  experiment_name: "/Users/your_user/dspy_azure_search_extraction"
+  tracking_uri: "databricks" # or local file path
+
+evaluation:
+  train_test_split: 0.6
+  quality_threshold: 0.6
+  metrics:
+    - answer_relevance
+    - answer_correctness
+
