@@ -58,7 +58,7 @@ def _create_vector_search_client() -> VectorSearchClient:
         host = config.host
 
     return VectorSearchClient(
-        workspace_url=host,
+        workspace_url="https://"+host,
         personal_access_token=token,
     )
 
@@ -172,7 +172,7 @@ class LLMClient:
                     "need_retrieval": True,
                     "reasoning": "Could not reliably determine context sufficiency.",
                 }
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(
                 f"Unexpected error in evaluate_context_sufficiency: {str(e)}",
                 exc_info=True,
