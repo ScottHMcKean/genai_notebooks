@@ -1,13 +1,12 @@
-
 [project]
 name = "genai_notebooks"
 version = "0.0.3"
-description = "Random Notebooks for GenAI"
+description = "Notebooks and examples for GenAI, agents, and related topics. Targets Databricks Serverless environment v4."
 authors = [
     {name = "Scott McKean", email = "scott.mckean@databricks.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.12.0"
+requires-python = ">=3.12,<3.13"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -16,90 +15,62 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+# Aligned with Databricks Serverless environment version 4.
+# See https://docs.databricks.com/aws/en/release-notes/serverless/environment-version/four
 dependencies = [
-    # Core framework
-    "requests>=2.31.0",
+    # Core (env 4: Python 3.12.3, pandas 2.2.3, pyarrow 19.0.1)
+    "requests>=2.32.0",
     "beautifulsoup4>=4.12.0",
-    "pandas>=2.0.0",
-    "pyarrow>=10.0.0",
+    "pandas>=2.2.0",
+    "pyarrow>=19.0.0",
     # Graph database
     "kuzu>=0.11.1",
-    # LLM and AI
-    "databricks-connect>=16.0.0",
+    # LLM and AI (env 4: databricks-connect 17.x, mlflow 2.22)
+    "databricks-connect>=17.0.0,<18",
+    "databricks-sdk>=0.49.0",
     "databricks-langchain>=0.2.0",
     "langgraph>=0.5.0",
-    "mlflow>=3.1.0",
+    "mlflow>=2.22.0",
     "openai",
     "databricks-vectorsearch>=0.44.0",
     "dspy-ai>=2.5.0",
     "azure-search-documents>=11.4.0",
-    "azure-identity>=1.15.0",
-    # API server
-    "fastapi>=0.111.0",
-    "uvicorn[standard]>=0.30.0",
+    "azure-identity>=1.20.0",
+    # API server (env 4: fastapi 0.115, uvicorn 0.34)
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
     # Web interface
     "streamlit>=1.28.0",
-    "plotly>=5.15.0",
+    "plotly>=5.24.0",
     "pyvis>=0.3.2",
     # Utilities
     "pyyaml>=6.0.0",
     "html2text>=2020.1.16",
     "pdfplumber>=0.11.0",
     "networkx>=3.0",
-    # Development
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-mock>=3.10.0",
-    "black>=23.0.0",
+    # Development (notebook-only repo; no tests or src)
+    "black>=24.0.0",
     "isort>=5.12.0",
     "flake8>=6.0.0",
     "mypy>=1.0.0",
-    "ipykernel",
-    "pip",
+    "ipykernel>=6.29.0",
+    "nest-asyncio>=1.6.0",
     "mcp>=1.13.1",
     "databricks-mcp>=0.4.0",
 ]
 
+[project.optional-dependencies]
+# Install env-4–aligned versions for local repro
+# (mlflow/pydantic left to resolver to satisfy databricks-mcp and mcp)
+serverless-env4 = [
+    "databricks-connect==17.0.1",
+    "databricks-sdk==0.49.0",
+    "pandas==2.2.3",
+    "pyarrow==19.0.1",
+    "fastapi==0.115.12",
+    "uvicorn==0.34.2",
+]
+
 [project.urls]
 Homepage = "https://databricks.com"
-Repository = "https://github.com/ScottHMcKean/genai_notebooks"
-
-[tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "-ra -q --strict-markers --tb=short"
-testpaths = [
-    "tests",
-]
-python_files = [
-    "test_*.py",
-    "*_test.py",
-]
-markers = [
-    "integration: marks tests as integration tests (slow, requires network)",
-    "skip: marks tests as skipped by default",
-]
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning",
-]
-
-[tool.coverage.run]
-source = ["src"]
-omit = [
-    "*/tests/*",
-    "*/test_*",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "if settings.DEBUG",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
-] 
+Repository = "https://github.com/ScottHMcKean/genai_notebooks" 

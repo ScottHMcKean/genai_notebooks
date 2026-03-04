@@ -1,4 +1,74 @@
 # GenAI Notebooks
 
-This is a simple repo holding notebooks related to GenAI projects.
+Index of notebooks by topic. Most run on [Databricks Serverless](https://docs.databricks.com/aws/en/release-notes/serverless/environment-version/four) (set **Base environment** to env 4 in the notebook **Environment** panel).
+
+---
+
+## Index
+
+### AI functions (benchmarking & testing, incl. AI_QUERY and external models)
+| Notebook |
+|----------|
+| [ai_functions/les_mis_data_prep.ipynb](ai_functions/les_mis_data_prep.ipynb) |
+| [ai_functions/les_mis_endpoint_creation.ipynb](ai_functions/les_mis_endpoint_creation.ipynb) |
+| [ai_functions/les_miserables_aiquery.ipynb](ai_functions/les_miserables_aiquery.ipynb) |
+| [ai_functions/les_miserables_ray.ipynb](ai_functions/les_miserables_ray.ipynb) |
+| [ai_functions/les_miserables_spark.ipynb](ai_functions/les_miserables_spark.ipynb) |
+| [ai_functions/ray_external_model_les_mis.ipynb](ai_functions/ray_external_model_les_mis.ipynb) |
+
+### External models
+| Notebook |
+|----------|
+| [external_models/azure_assistant_tracing.ipynb](external_models/azure_assistant_tracing.ipynb) |
+| [external_models/azure_search_responses_agent.ipynb](external_models/azure_search_responses_agent.ipynb) |
+| [external_models/openai_oss_thinking.ipynb](external_models/openai_oss_thinking.ipynb) |
+
+### Cost management
+| Notebook |
+|----------|
+| [cost_management/throughput_estimation.ipynb](cost_management/throughput_estimation.ipynb) |
+
+### Custom models
+| Notebook |
+|----------|
+| [custom_models/Gemma3.ipynb](custom_models/Gemma3.ipynb) |
+| [custom_models/Qwen Example.ipynb](custom_models/Qwen%20Example.ipynb) |
+| [custom_models/tinyllama_transformers.ipynb](custom_models/tinyllama_transformers.ipynb) |
+
+### DSPy
+| Notebook |
+|----------|
+| [dspy/azure_search_extraction.ipynb](dspy/azure_search_extraction.ipynb) |
+
+### Evaluation & MLflow
+| Notebook |
+|----------|
+| [evaluation/mlflow_genai_evaluation.ipynb](evaluation/mlflow_genai_evaluation.ipynb) |
+
+### FastAPI
+| Notebook |
+|----------|
+| [fastapi/test_app.ipynb](fastapi/test_app.ipynb) |
+| [fastapi/test_llm_client.ipynb](fastapi/test_llm_client.ipynb) |
+
+### LangGraph
+| Notebook |
+|----------|
+| [langgraph/langgraph_basics.ipynb](langgraph/langgraph_basics.ipynb) |
+| [langgraph/reasoning.ipynb](langgraph/reasoning.ipynb) |
+| [langgraph/structured_outputs.ipynb](langgraph/structured_outputs.ipynb) |
+
+### MCP (Model Context Protocol)
+| Notebook |
+|----------|
+| [mcp/test_connection.ipynb](mcp/test_connection.ipynb) |
+
+### Multimodal
+| Notebook |
+|----------|
+| [multimodal/ai_query.dbquery.ipynb](multimodal/ai_query.dbquery.ipynb) |
+| [multimodal/claude_ai_query.ipynb](multimodal/claude_ai_query.ipynb) |
+| [multimodal/claude_structured.ipynb](multimodal/claude_structured.ipynb) |
+| [multimodal/few_shot_multimodal_classification.ipynb](multimodal/few_shot_multimodal_classification.ipynb) |
+| [multimodal/pdf_parsing.ipynb](multimodal/pdf_parsing.ipynb) |
 
