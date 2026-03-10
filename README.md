@@ -72,3 +72,10 @@ Index of notebooks by topic. Most run on [Databricks Serverless](https://docs.da
 | [multimodal/few_shot_multimodal_classification.ipynb](multimodal/few_shot_multimodal_classification.ipynb) |
 | [multimodal/pdf_parsing.ipynb](multimodal/pdf_parsing.ipynb) |
 
+### vLLM
+| Notebook |
+|----------|
+| [vllm/qwen35_4b_throughput.ipynb](vllm/qwen35_4b_throughput.ipynb) |
+
+vLLM + Qwen 3.5 4B throughput profiling (~500 rows). Deploy and run via Asset Bundle on single-node A100 (`NC24ads_A100_v4`), ML Runtime 16.4 LTS: `databricks bundle deploy -t dev` then `databricks bundle run -t dev vllm_qwen_throughput_job`.
+
