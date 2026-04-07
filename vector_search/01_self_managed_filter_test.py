@@ -380,7 +380,126 @@ results_log.append({
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 5. Results summary
+# MAGIC ## 5. Bare REST API calls
+# MAGIC
+# MAGIC These reproduce the customer's original `curl` approach using `requests`
+# MAGIC against the Vector Search REST API directly, without the SDK wrapper.
+
+# COMMAND ----------
+
+import requests
+
+api_ctx = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
+host = api_ctx.apiUrl().get()
+token = api_ctx.apiToken().get()
+
+API_URL = f"{host}/api/2.0/vector-search/indexes/{INDEX_NAME}/query"
+HEADERS = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+def timed_api_call(label, payload):
+    t0 = time.perf_counter()
+    resp = requests.post(API_URL, headers=HEADERS, json=payload)
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    status = "OK" if resp.ok else "ERROR"
+    body = resp.json() if resp.ok else {}
+    num_rows = len(body.get("result", {}).get("data_array", []))
+    results_log.append({
+        "test": f"[REST] {label}",
+        "status": status,
+        "latency_ms": round(elapsed_ms, 1),
+        "rows": num_rows if resp.ok else 0,
+        **({"error": resp.text[:120]} if not resp.ok else {}),
+    })
+    return resp, elapsed_ms
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### REST TEST 1: `query_text=""` + filter (customer's curl)
+# MAGIC
+# MAGIC This is the exact payload the customer sent.
+
+# COMMAND ----------
+
+print("REST TEST 1: query_text='' + filter")
+resp, ms = timed_api_call("query_text='' + filter", {
+    "columns": ["id", "first_name", "last_name", "email", "job_title"],
+    "num_results": 4,
+    "filters_json": json.dumps({"email": target["email"]}),
+    "query_text": "",
+})
+if resp.ok:
+    for row in resp.json()["result"]["data_array"]:
+        print(f"  {row}")
+else:
+    print(f"EXPECTED ERROR ({resp.status_code}): {resp.text[:200]}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### REST TEST 2: dummy `query_vector` + filter
+
+# COMMAND ----------
+
+print("REST TEST 2: dummy query_vector + filter")
+resp, ms = timed_api_call("dummy_vector + filter", {
+    "columns": ["id", "first_name", "last_name", "email", "job_title"],
+    "num_results": 4,
+    "filters_json": json.dumps({"email": target["email"]}),
+    "query_vector": [0.5] * EMBEDDING_DIM,
+})
+if resp.ok:
+    for row in resp.json()["result"]["data_array"]:
+        print(f"  id={row[0]}  email={row[3]}  score={row[-1]}  latency={ms:.0f}ms")
+else:
+    print(f"ERROR: {resp.text[:200]}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### REST TEST 3: real embedding + filter
+
+# COMMAND ----------
+
+print("REST TEST 3: real embedding + filter")
+resp, ms = timed_api_call("real_vector + filter", {
+    "columns": ["id", "first_name", "last_name", "email", "job_title"],
+    "num_results": 4,
+    "filters_json": json.dumps({"email": target["email"]}),
+    "query_vector": target["embedding"],
+})
+if resp.ok:
+    for row in resp.json()["result"]["data_array"]:
+        print(f"  id={row[0]}  email={row[3]}  score={row[-1]}  latency={ms:.0f}ms")
+else:
+    print(f"ERROR: {resp.text[:200]}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### REST TEST 4: scan_index via REST (no vector)
+
+# COMMAND ----------
+
+print("REST TEST 4: scan_index via REST")
+scan_url = f"{host}/api/2.0/vector-search/indexes/{INDEX_NAME}/scan"
+t0 = time.perf_counter()
+resp = requests.get(scan_url, headers=HEADERS, params={"num_results": NUM_PEOPLE})
+scan_ms = (time.perf_counter() - t0) * 1000
+if resp.ok:
+    data = resp.json().get("data", [])
+    print(f"scan returned {len(data)} rows in {scan_ms:.0f}ms")
+    results_log.append({"test": "[REST] scan_index", "status": "OK",
+                        "latency_ms": round(scan_ms, 1), "rows": len(data)})
+else:
+    print(f"ERROR: {resp.text[:200]}")
+    results_log.append({"test": "[REST] scan_index", "status": "ERROR",
+                        "latency_ms": round(scan_ms, 1), "error": resp.text[:120]})
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 6. Results summary
 
 # COMMAND ----------
 

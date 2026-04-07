@@ -358,7 +358,125 @@ results_log.append({
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 5. Results summary
+# MAGIC ## 5. Bare REST API calls
+# MAGIC
+# MAGIC These mirror the customer's original `curl`-based approach using raw
+# MAGIC HTTP requests against the Vector Search REST API.
+
+# COMMAND ----------
+
+import requests
+
+api_ctx = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
+host = api_ctx.apiUrl().get()
+token = api_ctx.apiToken().get()
+
+API_URL = f"{host}/api/2.0/vector-search/indexes/{INDEX_NAME}/query"
+HEADERS = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+def timed_api_call(label, payload):
+    t0 = time.perf_counter()
+    resp = requests.post(API_URL, headers=HEADERS, json=payload)
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    status = "OK" if resp.ok else "ERROR"
+    body = resp.json() if resp.ok else {}
+    num_rows = len(body.get("result", {}).get("data_array", []))
+    results_log.append({
+        "test": f"[REST] {label}",
+        "status": status,
+        "latency_ms": round(elapsed_ms, 1),
+        "rows": num_rows if resp.ok else 0,
+        **({"error": resp.text[:120]} if not resp.ok else {}),
+    })
+    return resp, elapsed_ms
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### REST TEST 1: `query_text` + filter (managed -- should work)
+# MAGIC
+# MAGIC With managed embeddings, the platform embeds the query text server-side.
+
+# COMMAND ----------
+
+print("REST TEST 1: query_text='analyst' + email filter")
+resp, ms = timed_api_call("query_text + filter", {
+    "columns": ["id", "first_name", "last_name", "email", "job_title"],
+    "num_results": 4,
+    "filters_json": json.dumps({"email": target["email"]}),
+    "query_text": "analyst",
+})
+if resp.ok:
+    for row in resp.json()["result"]["data_array"]:
+        print(f"  id={row[0]}  email={row[3]}  score={row[-1]}  latency={ms:.0f}ms")
+else:
+    print(f"ERROR: {resp.text[:200]}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### REST TEST 2: `query_text=""` + filter (the customer's original curl)
+
+# COMMAND ----------
+
+print("REST TEST 2: query_text='' + email filter")
+resp, ms = timed_api_call("query_text='' + filter", {
+    "columns": ["id", "first_name", "last_name", "email", "job_title"],
+    "num_results": 4,
+    "filters_json": json.dumps({"email": target["email"]}),
+    "query_text": "",
+})
+if resp.ok:
+    for row in resp.json()["result"]["data_array"]:
+        print(f"  id={row[0]}  email={row[3]}  score={row[-1]}  latency={ms:.0f}ms")
+    print("query_text='' WORKS with managed embeddings via REST API")
+else:
+    print(f"ERROR: {resp.text[:200]}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### REST TEST 3: hybrid search + filter
+
+# COMMAND ----------
+
+print("REST TEST 3: hybrid search + filter via REST")
+resp, ms = timed_api_call("hybrid + filter", {
+    "columns": ["id", "first_name", "last_name", "email", "job_title"],
+    "num_results": 4,
+    "filters_json": json.dumps({"email": target["email"]}),
+    "query_text": "analyst data",
+    "query_type": "hybrid",
+})
+if resp.ok:
+    for row in resp.json()["result"]["data_array"]:
+        print(f"  id={row[0]}  email={row[3]}  score={row[-1]}  latency={ms:.0f}ms")
+else:
+    print(f"ERROR: {resp.text[:200]}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### REST TEST 4: filter only via REST (no query_text, no query_vector)
+
+# COMMAND ----------
+
+print("REST TEST 4: filter only, no query_text or query_vector")
+resp, ms = timed_api_call("filter only (no query)", {
+    "columns": ["id", "first_name", "last_name", "email", "job_title"],
+    "num_results": 4,
+    "filters_json": json.dumps({"email": target["email"]}),
+})
+if resp.ok:
+    for row in resp.json()["result"]["data_array"]:
+        print(f"  id={row[0]}  email={row[3]}  score={row[-1]}  latency={ms:.0f}ms")
+else:
+    print(f"ERROR ({resp.status_code}): {resp.text[:200]}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 6. Results summary
 
 # COMMAND ----------
 
