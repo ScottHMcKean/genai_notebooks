@@ -63,6 +63,13 @@ Index of notebooks by topic. Most run on [Databricks Serverless](https://docs.da
 |----------|
 | [mcp/test_connection.ipynb](mcp/test_connection.ipynb) |
 
+### Document Intelligence
+| Notebook |
+|----------|
+| [document_intelligence/claim_doc_parsing.ipynb](document_intelligence/claim_doc_parsing.ipynb) |
+
+Compare two PDF extraction paths — `ai_parse_document` → `ai_query` (SQL-native chain) and bare FMAPI UDF on raw PDF bytes — against a hand-labeled golden set of 10 public insurance documents. Includes tolerant scorer, MLflow benchmark, and a Delta-backed prompt registry for governance.
+
 ### Multimodal
 | Notebook |
 |----------|
