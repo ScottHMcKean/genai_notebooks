@@ -1,0 +1,47 @@
+# Claim document parsing -- ai_parse_document -> ai_query vs. Ray + direct FMAPI.
+#
+# Deploy:  databricks bundle deploy -t dev
+# Run:     databricks bundle run -t dev document_intelligence_job
+#
+# Three serverless notebook tasks pinned to environment version 5 (required by the
+# Ray task -- ships Ray preinstalled + supports `ray.util.spark.setup_ray_cluster`).
+# Each notebook does its own `%pip install` + `%restart_python` for extras.
+#
+# Both notebooks assume UC `shm.genai` exists and the running principal can write
+# to it; the ai_parse task creates the `raw_pdfs` volume and downloads the 10-doc
+# golden set the first time it runs.
+
+resources:
+  jobs:
+    document_intelligence_job:
+      name: "[Doc Intel] Claim PDF extraction -- ai_parse_document vs Ray+FMAPI"
+      max_concurrent_runs: 1
+
+      environments:
+        - environment_key: serverless_v5
+          spec:
+            client: "5"
+
+      tasks:
+        - task_key: ai_parse_chain
+          notebook_task:
+            notebook_path: ../document_intelligence/claim_doc_ai_parse.ipynb
+          environment_key: serverless_v5
+          timeout_seconds: 3600
+
+        - task_key: ray_claude_direct
+          depends_on:
+            - task_key: ai_parse_chain  # reuses the volume + PDFs staged upstream
+          notebook_task:
+            notebook_path: ../document_intelligence/claim_doc_ray_claude.ipynb
+          environment_key: serverless_v5
+          timeout_seconds: 3600
+
+        - task_key: profile
+          depends_on:
+            - task_key: ai_parse_chain
+            - task_key: ray_claude_direct
+          notebook_task:
+            notebook_path: ../document_intelligence/claim_doc_profile.ipynb
+          environment_key: serverless_v5
+          timeout_seconds: 600

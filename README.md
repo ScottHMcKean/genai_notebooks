@@ -66,18 +66,28 @@ Index of notebooks by topic. Most run on [Databricks Serverless](https://docs.da
 ### Document Intelligence
 | Notebook |
 |----------|
-| [document_intelligence/claim_doc_parsing.ipynb](document_intelligence/claim_doc_parsing.ipynb) |
+| [document_intelligence/claim_doc_ai_parse.ipynb](document_intelligence/claim_doc_ai_parse.ipynb) |
+| [document_intelligence/claim_doc_ray_claude.ipynb](document_intelligence/claim_doc_ray_claude.ipynb) |
+| [document_intelligence/claim_doc_profile.ipynb](document_intelligence/claim_doc_profile.ipynb) |
+| [document_intelligence/ai_query.dbquery.ipynb](document_intelligence/ai_query.dbquery.ipynb) |
+| [document_intelligence/claude_ai_query.ipynb](document_intelligence/claude_ai_query.ipynb) |
+| [document_intelligence/claude_structured.ipynb](document_intelligence/claude_structured.ipynb) |
+| [document_intelligence/docling_on_databricks.ipynb](document_intelligence/docling_on_databricks.ipynb) |
+| [document_intelligence/few_shot_multimodal_classification.ipynb](document_intelligence/few_shot_multimodal_classification.ipynb) |
+| [document_intelligence/pdf_parsing.ipynb](document_intelligence/pdf_parsing.ipynb) |
 
-Compare two PDF extraction paths — `ai_parse_document` → `ai_query` (SQL-native chain) and bare FMAPI UDF on raw PDF bytes — against a hand-labeled golden set of 10 public insurance documents. Includes tolerant scorer, MLflow benchmark, and a Delta-backed prompt registry for governance.
+Two complementary PDF extraction paths on a hand-labeled golden set of 10 public
+insurance documents, scored with the same tolerant scorer and shared JSON schema:
 
-### Multimodal
-| Notebook |
-|----------|
-| [multimodal/ai_query.dbquery.ipynb](multimodal/ai_query.dbquery.ipynb) |
-| [multimodal/claude_ai_query.ipynb](multimodal/claude_ai_query.ipynb) |
-| [multimodal/claude_structured.ipynb](multimodal/claude_structured.ipynb) |
-| [multimodal/few_shot_multimodal_classification.ipynb](multimodal/few_shot_multimodal_classification.ipynb) |
-| [multimodal/pdf_parsing.ipynb](multimodal/pdf_parsing.ipynb) |
+- `claim_doc_ai_parse.ipynb` — SQL-native `ai_parse_document` → `ai_query` chain,
+  Delta-backed prompt registry.
+- `claim_doc_ray_claude.ipynb` — direct FMAPI `DocumentContent` call (the path
+  needed because `ai_query` still doesn't accept PDF bytes as of 2026-04),
+  parallelized with Ray on Serverless env v5.
+
+The remaining notebooks cover adjacent multimodal/document-parsing territory (image
+→ text via Claude, Docling serving, few-shot classification, PDF-to-Claude via the
+Anthropic SDK).
 
 ### vLLM
 | Notebook |
