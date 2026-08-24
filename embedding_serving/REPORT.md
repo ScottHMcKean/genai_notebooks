@@ -56,6 +56,44 @@ Notes:
 4. Prefer the **`llm/v1/embeddings` entrypoint** once it's available on the workspace's Model Serving
    release — it's the cleaner, supported packaging for the same engine.
 
+## Expected TEI throughput (estimated — not measured)
+
+We could **not** run TEI on this workspace (see constraints below), so these are **estimates from a quick
+review of a few public TEI benchmarks**, anchored to the throughput we *did* measure. Treat as
+**medium-confidence** ballpark figures, not a TEI run on this exact model.
+
+Method: the closest public signal is a BERT-base, 768-dim encoder (`bge-base-en-v1.5`) on A10-class GPUs at
+seq-len 512 — TEI ≈ **~450 docs/s** ([HF Inference Endpoints TEI blog][1]) vs sentence-transformers ≈
+**~206 rows/s** ([HF `uv-scripts` benchmark][2]) → **TEI ≈ ~2.2× sentence-transformers**. Applying that to
+our measured sentence-transformers endpoint and cross-checking against our vLLM result:
+
+| GPU | Estimated rows/s | Estimated tokens/s | Basis |
+|---|---:|---:|---|
+| A10 | ~300–350 | ~95k–115k | ~2.2× our ST endpoint (152 rows/s); ≈ our vLLM (277) or a bit above |
+| T4 | ~80–110 | ~25k–35k | only ~1.1–1.5× our ST T4 (72) — no Flash-Attention on Turing |
+
+- **A10 is where TEI shines** — Flash-Attention 2 + unpadding on Ampere (ModernBERT's fast path). That's
+  the ~2× gap over sentence-transformers, and why TEI-on-A10 would likely land **around or slightly above
+  our working vLLM (89.5k tok/s)**. Variable-length inputs (our corpus averages ~320 tok, not a flat 512)
+  could push it higher via unpadding.
+- **T4 gets little of that** — TEI's Turing image runs with Flash-Attention **off**, so on T4 it collapses
+  to roughly the sentence-transformers/vLLM T4 ballpark. The GPU, not the server, is the bottleneck.
+- **req/s** depends on batching: with dynamic batching and single-doc requests, ~300+ req/s on A10; a
+  32-doc-per-request batch is ~10 req/s.
+
+**Bottom line:** on A10, TEI would likely deliver ~95k–115k tok/s — the **same ballpark as the vLLM pyfunc
+already deployed here (89.5k)**. The dominant lever is **A10 + Flash-Attention**, not TEI vs vLLM. Firming
+this up requires actually running TEI, which needs compute that allows a container or the Rust binary
+(a classic GPU cluster or custom-container serving) — not available on this serverless-only workspace.
+
+Sources (quick review):
+- [1] HF — Deploy Embedding Models with Inference Endpoints (TEI, bge-base A10G ~450 req/s): https://huggingface.co/blog/inference-endpoints-embeddings
+- [2] HF `uv-scripts/embeddings` benchmark (bge-base A10G ~206 rows/s, 20k rows, seq-512): https://huggingface.co/datasets/uv-scripts/embeddings
+- TEI docs & benchmark charts: https://huggingface.co/docs/text-embeddings-inference/index
+- TEI repo: https://github.com/huggingface/text-embeddings-inference
+- ModernBERT paper (tokens/s efficiency): https://aclanthology.org/2025.acl-long.127.pdf
+- gigagpu TEI throughput across GPUs (docs/sec): https://gigagpu.com/embedding-throughput-benchmark-gigagpu/
+
 ---
 
 ## Environment constraints discovered
