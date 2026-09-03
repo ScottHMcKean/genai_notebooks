@@ -44,6 +44,30 @@ Related Ray/AI-Runtime material lives in [`ai_runtime/`](ai_runtime/README.md) (
 
 ---
 
+## Tracing, governance & observability — a custom agent, end to end
+
+How to make **tracing real** for a custom agent on Databricks today: framework autolog,
+OpenTelemetry traces stored in **Unity Catalog**, conversation history from traces, and
+per-user **governance** — on a forecasting-chat use case (a team converses with a Monte
+Carlo simulation). Verified end to end on a workspace. Full detail in
+[`tracing/README.md`](tracing/README.md); the "how it's wired" reference (components,
+exact queries, measured latencies, permissions, doc links) is
+[`tracing/WIRING.md`](tracing/WIRING.md).
+
+| | Shows | How |
+|---|-------|-----|
+| **a** | Framework **autolog** + a tool span | `mlflow.openai.autolog()` + `@mlflow.trace` |
+| **b** | Traces are **OpenTelemetry** → **Unity Catalog** | `set_experiment(trace_location=UnityCatalog(...))` |
+| **c** | Retrieve traces as **history** (users + sessions) | `search_traces(filter_string="metadata.\`mlflow.trace.user\` = …")` |
+| **d** | **Governance** — a user only sees their own traces | app pins the filter to the caller **+** a trace-scoped UC secure view |
+| **e** | **Latency** (generation + retrieval) profiled | span durations in UC + timed `search_traces`/`get_trace` |
+
+Ships the agent as a **Databricks App** ([`tracing/app/`](tracing/app/README.md)) —
+per-user chat history grouped by session, plus Monte Carlo distribution-chart **artifacts**
+persisted to a UC Volume.
+
+---
+
 ## Index
 
 ### AI functions (benchmarking & testing, incl. AI_QUERY and external models)
@@ -161,4 +185,34 @@ Anthropic SDK).
 | [vllm/qwen35_4b_throughput.ipynb](vllm/qwen35_4b_throughput.ipynb) |
 
 vLLM + Qwen 3.5 4B throughput profiling (~500 rows). Deploy and run via Asset Bundle on single-node A100 (`NC24ads_A100_v4`), ML Runtime 16.4 LTS: `databricks bundle deploy -t dev` then `databricks bundle run -t dev vllm_qwen_throughput_job`.
+
+### Embedding serving
+| Notebook / doc |
+|----------------|
+| [embedding_serving/README.md](embedding_serving/README.md) |
+| [embedding_serving/REPORT.md](embedding_serving/REPORT.md) |
+
+Bioclinical ModernBERT embedding serving on Databricks with TEI, plus throughput
+profiling. See `embedding_serving/README.md`.
+
+### Vector Search
+| Notebook |
+|----------|
+| [vector_search/1a_self_managed_filter_test.py](vector_search/1a_self_managed_filter_test.py) |
+| [vector_search/1b_managed_embedding_filter_test.py](vector_search/1b_managed_embedding_filter_test.py) |
+| [vector_search/2d_benchmark.py](vector_search/2d_benchmark.py) |
+| [vector_search/3a_cortex_vs_vectorsearch_bench.py](vector_search/3a_cortex_vs_vectorsearch_bench.py) |
+| [vector_search/3b_spark_vector.ipynb](vector_search/3b_spark_vector.ipynb) |
+
+Vector Search benchmarking and patterns: self-managed vs managed-embedding indexes and
+metadata filters, Databricks Vector Search vs Postgres (pgvector) vs Snowflake Cortex,
+Spark-side vector ops, and a service-principal OAuth repro. Bundle config in
+`vector_search/databricks.yml`.
+
+### AI Gateway
+| Notebook |
+|----------|
+| [ai_gateway/ai_gateway_calls.ipynb](ai_gateway/ai_gateway_calls.ipynb) |
+
+Calling models through the Mosaic AI Gateway (unified endpoint access).
 
