@@ -1,0 +1,10 @@
+# Databricks App runtime config. Apps bind to port 8000.
+command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+env:
+  # Experiment the app writes traces to and reads history from. Bind this
+  # experiment to a UC trace location once (see ../01_custom_agent_tracing.py, section b).
+  - name: FORECAST_EXPERIMENT_PATH
+    value: "/Users/scott.mckean@databricks.com/forecast_tracing_exp"
+  # Warehouse MLflow uses to read UC-backed traces (needed for /api/history).
+  - name: MLFLOW_TRACING_SQL_WAREHOUSE_ID
+    value: "505ec857e6b4ea23"

@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Forecast Chat</title>
+<style>
+  :root { color-scheme: light dark; --bd:#d9d9d9; --mut:#6b6b6b; --amber:#ff6f00;
+          --bg:#fafafa; --panel:#fff; --userbg:#fff3e6; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bd:#333; --mut:#9a9a9a; --bg:#0f0f10; --panel:#17181a; --userbg:#2a2113; }
+  }
+  * { box-sizing: border-box; }
+  html, body { height:100%; }
+  body { margin:0; background:var(--bg);
+         font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  header { padding:11px 16px; border-bottom:1px solid var(--bd); background:var(--panel);
+           display:flex; align-items:center; gap:10px; }
+  header h1 { font-size:15px; margin:0; font-weight:650; }
+  header .who { margin-left:auto; color:var(--mut); font-size:12px; }
+  header button.newchat { font-size:12px; padding:5px 10px; border:1px solid var(--bd);
+           border-radius:7px; background:transparent; color:inherit; cursor:pointer; }
+  .wrap { display:grid; grid-template-columns:260px 1fr; height:calc(100vh - 47px); }
+  aside { border-right:1px solid var(--bd); overflow:auto; padding:12px; background:var(--panel); }
+  aside h2 { font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+             color:var(--mut); margin:2px 0 8px; }
+  .hist { padding:8px 10px; border:1px solid var(--bd); border-radius:8px; margin-bottom:6px;
+          font-size:12.5px; background:var(--bg); cursor:pointer; }
+  .hist:hover { border-color:var(--amber); }
+  .hist.active { border-color:var(--amber); background:var(--userbg); }
+  .hist .s { color:var(--mut); font-size:11px; margin-top:2px; }
+  .bubble img.chart { display:block; margin-top:10px; max-width:100%; border:1px solid var(--bd);
+          border-radius:8px; }
+  main { display:flex; flex-direction:column; min-width:0; }
+  #log { flex:1; overflow:auto; padding:18px 16px; }
+  .row { display:flex; margin:0 0 14px; }
+  .row.user { justify-content:flex-end; }
+  .bubble { max-width:70ch; padding:11px 14px; border-radius:14px; border:1px solid var(--bd);
+            background:var(--panel); overflow-wrap:anywhere; }
+  .row.user .bubble { background:var(--userbg); border-color:#f0c690; }
+  .bubble p { margin:.4em 0; } .bubble p:first-child { margin-top:0; }
+  .bubble p:last-child { margin-bottom:0; }
+  .bubble ul, .bubble ol { margin:.4em 0; padding-left:1.3em; }
+  .bubble li { margin:.15em 0; }
+  .bubble h1,.bubble h2,.bubble h3,.bubble h4 { margin:.5em 0 .3em; line-height:1.25; }
+  .bubble h1{font-size:1.25em}.bubble h2{font-size:1.15em}.bubble h3{font-size:1.05em}.bubble h4{font-size:1em}
+  .bubble code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.9em;
+            background:rgba(127,127,127,.16); padding:.05em .35em; border-radius:4px; }
+  .bubble pre { background:rgba(127,127,127,.12); padding:10px 12px; border-radius:8px;
+            overflow-x:auto; } .bubble pre code { background:none; padding:0; }
+  .bubble table { border-collapse:collapse; margin:.4em 0; }
+  .bubble th,.bubble td { border:1px solid var(--bd); padding:4px 8px; text-align:left; }
+  .tool { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px;
+          color:var(--mut); padding:7px 11px; border-left:3px solid var(--amber);
+          margin:0 0 14px; background:rgba(255,111,0,.07); border-radius:0 8px 8px 0;
+          white-space:pre-wrap; overflow-x:auto; }
+  .typing { color:var(--mut); font-style:italic; }
+  form { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--bd); background:var(--panel); }
+  input#q { flex:1; padding:11px 13px; border:1px solid var(--bd); border-radius:9px;
+          background:var(--bg); color:inherit; font-size:14px; }
+  button#send { padding:11px 18px; border:0; border-radius:9px; background:var(--amber);
+          color:#fff; font-weight:650; cursor:pointer; }
+  button#send:disabled { opacity:.5; cursor:default; }
+  .empty { color:var(--mut); text-align:center; margin-top:12vh; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📈 Forecast Chat</h1>
+  <button class="newchat" id="newchat">+ New chat</button>
+  <span class="who">signed in as <b id="who">…</b></span>
+</header>
+<div class="wrap">
+  <aside>
+    <h2>Your history</h2>
+    <div id="history"></div>
+  </aside>
+  <main>
+    <div id="log"><div class="empty" id="empty">Ask about a projection, a range, or the odds of hitting a target.<br>e.g. “Start at 500 units, grow 2%/month (std 5%) for 12 months — odds of clearing 650?”</div></div>
+    <form id="f">
+      <input id="q" autocomplete="off" placeholder="Ask about a forecast…" />
+      <button id="send" type="submit">Send</button>
+    </form>
+  </main>
+</div>
+<script>
+const log = document.getElementById("log");
+const histEl = document.getElementById("history");
+const qEl = document.getElementById("q");
+const sendBtn = document.getElementById("send");
+let sessionId = newSession();
+let history = [];              // [{role, content}] sent to the agent for multi-turn memory
+
+function newSession() { return "sess-" + Math.random().toString(36).slice(2, 10); }
+
+// --- tiny, safe markdown renderer (escape first, then a useful subset) --------------
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function inline(s){
+  return s
+    .replace(/`([^`]+)`/g, (_,c)=>`<code>${c}</code>`)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>")
+    .replace(/\b_([^_]+)_\b/g, "<em>$1</em>");
+}
+function renderMd(text){
+  const lines = esc(text).split("\n");
+  let html = "", i = 0;
+  while (i < lines.length){
+    let ln = lines[i];
+    if (/^```/.test(ln)){ let code=""; i++;
+      while(i<lines.length && !/^```/.test(lines[i])){ code+=lines[i]+"\n"; i++; }
+      html += `<pre><code>${code}</code></pre>`; i++; continue; }
+    let h = ln.match(/^(#{1,4})\s+(.*)$/);
+    if (h){ const n=h[1].length; html += `<h${n}>${inline(h[2])}</h${n}>`; i++; continue; }
+    if (/^\s*[-*]\s+/.test(ln)){ html+="<ul>";
+      while(i<lines.length && /^\s*[-*]\s+/.test(lines[i])){ html+=`<li>${inline(lines[i].replace(/^\s*[-*]\s+/,""))}</li>`; i++; }
+      html+="</ul>"; continue; }
+    if (/^\s*\d+\.\s+/.test(ln)){ html+="<ol>";
+      while(i<lines.length && /^\s*\d+\.\s+/.test(lines[i])){ html+=`<li>${inline(lines[i].replace(/^\s*\d+\.\s+/,""))}</li>`; i++; }
+      html+="</ol>"; continue; }
+    if (ln.trim()===""){ i++; continue; }
+    let para = ln; i++;
+    while(i<lines.length && lines[i].trim()!=="" && !/^(#{1,4}\s|\s*[-*]\s|\s*\d+\.\s|```)/.test(lines[i])){ para+=" "+lines[i]; i++; }
+    html += `<p>${inline(para)}</p>`;
+  }
+  return html;
+}
+
+function clearEmpty(){ const e=document.getElementById("empty"); if(e) e.remove(); }
+function addRow(role){
+  clearEmpty();
+  const row=document.createElement("div"); row.className="row "+role;
+  const b=document.createElement("div"); b.className="bubble";
+  row.appendChild(b); log.appendChild(row); log.scrollTop=log.scrollHeight; return b;
+}
+function addTool(text){
+  clearEmpty();
+  const d=document.createElement("div"); d.className="tool"; d.textContent=text;
+  log.appendChild(d); log.scrollTop=log.scrollHeight;
+}
+
+async function loadMe(){ try{ const j=await (await fetch("/api/me")).json();
+  document.getElementById("who").textContent=j.user; }catch(e){} }
+async function loadHistory(){
+  try{
+    const j=await (await fetch("/api/history")).json();
+    histEl.innerHTML="";
+    const sessions=j.sessions||[];
+    if(!sessions.length){ histEl.innerHTML='<div class="s">No conversations yet.</div>'; return; }
+    for(const s of sessions){
+      const d=document.createElement("div"); d.className="hist"; d.dataset.session=s.session_id||"";
+      const n=s.turns||1, plural=n===1?"turn":"turns";
+      d.innerHTML=`${esc((s.title||"(no text)").slice(0,90))}<div class="s">${esc(s.session_id||"")} · ${n} ${plural}</div>`;
+      d.addEventListener("click", ()=>loadSession(s.session_id));   // one box per conversation
+      histEl.appendChild(d);
+    }
+    markActive();
+  }catch(e){ histEl.innerHTML='<div class="s">History unavailable.</div>'; }
+}
+function markActive(){
+  for(const el of histEl.querySelectorAll(".hist"))
+    el.classList.toggle("active", el.dataset.session===sessionId);
+}
+function chartImg(url){ const im=document.createElement("img"); im.className="chart"; im.src=url;
+  im.onerror=()=>im.remove(); return im; }
+
+async function loadSession(sid){
+  if(!sid) return;
+  sessionId=sid; history=[];                       // continuing this conversation appends to it
+  log.innerHTML='<div class="empty">Loading conversation…</div>';
+  try{
+    const j=await (await fetch("/api/session?session_id="+encodeURIComponent(sid))).json();
+    log.innerHTML="";
+    if(!j.turns || !j.turns.length){ log.innerHTML='<div class="empty">No turns.</div>'; return; }
+    for(const t of j.turns){
+      addRow("user").textContent=t.question||"";
+      history.push({role:"user", content:t.question||""});
+      const b=addRow("assistant"); b.innerHTML=renderMd(t.answer||"");
+      if(t.chart_b64) b.appendChild(chartImg(t.chart_b64));    // artifact from the Volume, caller-scoped
+      if(t.answer) history.push({role:"assistant", content:t.answer});
+    }
+    markActive(); log.scrollTop=0;
+  }catch(e){ log.innerHTML='<div class="empty">Could not load conversation.</div>'; }
+}
+
+document.getElementById("newchat").addEventListener("click", ()=>{
+  sessionId=newSession(); history=[];
+  log.innerHTML='<div class="empty" id="empty">New conversation. Ask a forecasting question.</div>';
+  qEl.focus();
+});
+
+document.getElementById("f").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const q=qEl.value.trim(); if(!q) return;
+  qEl.value=""; sendBtn.disabled=true;
+  addRow("user").textContent=q;
+  history.push({role:"user", content:q});
+  const answer=addRow("assistant"); answer.innerHTML='<span class="typing">thinking…</span>';
+  try{
+    const resp=await fetch("/api/chat",{ method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ input: history, session_id: sessionId }) });
+    let data; try{ data=await resp.json(); }catch{ data={}; }
+    if(!resp.ok || data.error){
+      answer.innerHTML=`<em>Error: ${esc(data.error || ("HTTP "+resp.status))}</em>`;
+    } else {
+      // show the simulation step just above the answer, then render the answer as markdown
+      for(const tc of (data.tool_calls||[])){
+        answer.insertAdjacentElement("beforebegin", (()=>{ const d=document.createElement("div");
+          d.className="tool"; d.textContent=`▶ ${tc.name}(${tc.arguments})`+(tc.output?`\n◀ ${tc.output}`:"");
+          return d; })());
+      }
+      const txt=data.answer||"";
+      answer.innerHTML = txt ? renderMd(txt) : "<em>(no answer returned)</em>";
+      if(data.chart_b64) answer.appendChild(chartImg(data.chart_b64));   // simulation artifact
+      if(txt) history.push({role:"assistant", content:txt});
+      if(data.session_id) sessionId=data.session_id;
+      log.scrollTop=log.scrollHeight;
+    }
+  }catch(err){
+    answer.innerHTML=`<em>Request failed: ${esc(String(err))}</em>`;
+  }finally{
+    sendBtn.disabled=false; qEl.focus(); loadHistory();   // always re-enable so you can keep chatting
+  }
+});
+
+loadMe(); loadHistory(); qEl.focus();
+</script>
+</body>
+</html>
